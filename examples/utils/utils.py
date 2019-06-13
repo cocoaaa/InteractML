@@ -11,6 +11,11 @@ from geopy.geocoders import Nominatim
 def get_mro(myObj):
     return myObj.__class__.mro()
 
+def show_attrs(myObj):
+    import holoviews as hv
+    atts = [str(att) for att in dir(myObj) if not att.startswith('_')]
+    n_atts = len(atts)
+    return hv.Table(pd.DataFrame(atts, columns=['att']))
 
 def nprint(*args, header=True):
     if header:
@@ -46,7 +51,7 @@ def is_valid_url(path):
     r = requests.head(path)
     return r.status_code == requests.codes.ok
 
-def relabel_ndoverlay(ndOverlay, labels):
+def relabel_elements(ndoverlay, labels):
     """
     ndOverlay is indexed by integer
     labels (str or iterable of strs)
@@ -56,12 +61,12 @@ def relabel_ndoverlay(ndOverlay, labels):
     from itertools import cycle
     if isinstance(labels, str):
         labels = [labels]
-    if isinstance(labels, list) and len(labels) != len(ndOverlay):
+    if isinstance(labels, list) and len(labels) != len(ndoverlay):
         raise ValueError('Length of the labels and ndoverlay must be the same')
         
         
     it = cycle(labels) 
-    relabeled = hv.NdOverlay({i: ndOverlay[i].relabel(next(it)) for i in range(len(ndOverlay))})
+    relabeled = hv.NdOverlay({i: ndoverlay[i].relabel(next(it)) for i in range(len(ndoverlay))})
     return relabeled
 
 
