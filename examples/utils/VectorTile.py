@@ -15,9 +15,44 @@ import geopandas as gpd
 
 import holoviews as hv
 import geoviews as gv
+import pdb
+################################################################################
+## Set logger
+################################################################################
+import logging
+import datetime as dt
+LOG_ROOT = Path('../log/vectile_log')
+suffix='.log'
+log_dir = dt.datetime.now().strftime('%Y/%m/%d/%H')
+log_path = (LOG_ROOT/ log_dir).with_suffix(suffix)
+if not log_path.parent.exists():
+    log_path.parent.mkdir(parents=True)
 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+fh = logging.FileHandler(log_path)
+fh.setFormatter(formatter)
+fh.setLevel(logging.DEBUG)
+logger.addHandler(fh)
+
+logger.info(f'Setting a logger at  {log_path}')    
+logger.info('Logger is set. Strating VectorTile file.')
 # from .utils import relabel_elements
 
+#check if VEC_CACHE object exists in global namespace
+global VECTILE_CACHE
+try:
+    VECTILE_CACHE
+    logger.info('VECTILE_CACHE exists!')
+    print(list(VECTILE_CACHE.keys()))
+except NameError:
+    logger.info("VECTILE_CACHE doesn't exists -- initializing an empty cache...")
+    VECTILE_CACHE = {}
+
+################################################################################
+## VectorTile class
+################################################################################
 class VectorTile():
     """
     Assumes tiles are 256x256 pixel
@@ -30,12 +65,15 @@ class VectorTile():
     FFORMAT = 'json'
     CACHE_DIR = '../data/vectile_cache/'
     
-    #check if VEC_CACHE object exists in global namespace
-    global VECTILE_CACHE
-    try:
-        VECTILE_CACHE
-    except NameError:
-        VECTILE_CACHE = {}
+#     #check if VEC_CACHE object exists in global namespace
+#     global VECTILE_CACHE
+#     try:
+#         VECTILE_CACHE
+#         logger.info('VECTILE_CACHE exists!')
+#         print(list(VECTILE_CACHE.keys()))
+#     except NameError:
+#         logger.info("VECTILE_CACHE doesn't exists -- initializing an empty cache...")
+#         VECTILE_CACHE = {}
     
     @staticmethod
     def deg2xy(lat_deg, lon_deg, zoom):
@@ -87,16 +125,21 @@ class VectorTile():
         return cls(xtile, ytile, z)
     
     @classmethod
-    def from_latlon(cls, lat, lon, z):
+    def from_latlonz(cls, lat, lon, z):
         xtile, ytile = cls.deg2xy(lat, lon, z)
         return cls(xtile, ytile, z)
+    
+    @classmethod
+    def from_latlon(cls, lat, lon, z):
+        return cls.from_latlonz(lat,lon,z)
+    
     
     def info(self):
         print(f"x, y, z: , {self.xtile}, {self.ytile}, {self.z}")
         print(f"lat, lon: {self.lat}, {self.lon}")
         print(f"size: {self.size}")
         print(f"layer: {self.layer}")
-    
+        
     def to_gdf(self):
         """
         Given xtile, ytile and z(oom level), 
@@ -113,21 +156,24 @@ class VectorTile():
         and most importantly) geometries
 
         """
+#         print('global cache: ')
+#         print(list(VECTILE_CACHE.keys()))
         cache_key = (self.size,self.layer,self.z,self.xtile,self.ytile)
         
         # Check if this tile is in python session memory
         # If so, read from the memory, otherwise read from the disk
         if VECTILE_CACHE.get( cache_key ):
             if VECTILE_CACHE[cache_key].get('loaded'):
-                "Reading from python session memory"
+                print(f"Reading from python session memory: {cache_key}")
                 return VECTILE_CACHE[cache_key].get('dframe') #geopandas.gdf
             else:
-                "Reading from disk cache"
+                print(f"Reading from disk cache: {cache_key}")
                 return gpd.GeoDataFrame.read_file(VECTILE_CACHE[cache_key].get('fpath'))
 
         # Request a new tile
         r = requests.get(url=self.tile_url)
         if not r.ok:
+            logger.error(f'Tile Service error for {cache_key}: {r.status_code}')
             raise ValueError('reponse not ok: ', r.status_code)
         data = r.json()
 
@@ -136,8 +182,13 @@ class VectorTile():
         if not fdir.exists():
             fdir.mkdir(parents=True)
             print(f'{fdir} created')
+            logger.info(f'{fdir} created')
         fpath = fdir/ f'{self.ytile}.{self.fformat}'
+        
+        #todo: check if fpath.exists() and if so, no need to rewrite?
         print('Saving to: ', fpath)
+        logger.info(f'Saving to: {fpath}')
+
         with open(fpath, 'w') as f:
             json.dump(data,f)
 
@@ -146,7 +197,9 @@ class VectorTile():
         if fpath.exists():
             gdf = gpd.read_file(fpath)
         else:
-            raise IOError('File was not correctly written to disk: ', fpath)
+            err_msg = f'File was not correctly written to disk: {fpath}'
+            logger.error(err_msg)
+            raise IOError(err_msg)
 
         # Write to cache
         VECTILE_CACHE[cache_key] = {
@@ -182,6 +235,20 @@ class VectorTile():
     
         return ndoverlay
         
+    def fetch_zooms(self, zooms=None):
+        """
+        Fetches vector tiles at the current lat, lon with zoom level in zooms.
+        Saves them in the global cache and to the disk
+        """
+        if zooms is None:
+            max_z = min(self.z + 3, 17)
+            min_z = max(self.z - 3, 0)
+            zooms = range(min_z, max_z)
+        for z in zooms:
+            print(f'Requesting tile at zoom {self.lat, self.lon, z}... ')
+            logger.info(f'Requesting tile at zoom {self.lat, self.lon, z}... ')
+            VectorTile.from_latlonz(self.lat, self.lon, z).to_gdf()
+            
         
         
         
