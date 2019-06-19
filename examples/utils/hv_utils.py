@@ -95,7 +95,7 @@ def get_stats(arr, show_as_timestamp, decimals=3):
     """
     Computes statistics of a 1Dim xr.array type data
     Args:
-    - arr (np.array or xarray.DataArray)
+    - arr (np.array or xarray.DataArray in dask)
     - show_as_timestamp (bool): 
         If True, return the argmin and argmax as datetime64 
         If False, return as index to arr's coordinate
@@ -106,16 +106,25 @@ def get_stats(arr, show_as_timestamp, decimals=3):
         - mean, std, min, argmin, max, argmax,
 
     """
+    if isinstance(arr, (xr.DataArray, xr.Dataset)):
+        arr.load()
+        
     if arr.ndim != 1:
         raise ValueError(f'Input array must be 1-dim: {arr.ndim}')
+        
+    for i,val in enumerate(arr):
+        if np.isnan(val):
+            arr[i] = 0.0
+            
     from collections import OrderedDict 
     def to_float(x):
         return np.around(extract_item(x), decimals=decimals)
     
-    vals = list(map(to_float, [arr.mean(), arr.std(),
-                             arr.min(), arr.argmin(), 
-                             arr.max(), arr.argmax(),
-                             ]))    
+
+    vals = list(map(to_float, 
+                    [arr.mean(), arr.std(), arr.min(), 
+                     arr.argmin(), arr.max(), arr.argmax()]))
+    
     stats = OrderedDict(
         {'mean': vals[0],
         'std':vals[1],
@@ -133,7 +142,6 @@ def get_stats(arr, show_as_timestamp, decimals=3):
 #     print(type(stats['argmin']))
 #     pdb.set_trace()
 
-    pprint(stats)
     df = pd.DataFrame.from_records([stats], columns=stats.keys())
 #     pdb.set_trace()
     return df
