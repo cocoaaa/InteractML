@@ -2,6 +2,7 @@ import os
 import json
 from IPython.display import JSON, display
 
+import datetime as dt
 from pathlib import Path
 from pprint import pprint
 import pdb
@@ -52,7 +53,26 @@ def get_addr(lat, lon):
     loc= geolocator.reverse(f'{lat}, {lon}')
     return loc.address
 
+################################################################################
+# Time Type Conversion Helpers
+################################################################################
+def to_datetime(tlist):
+    """
+    Operation to convert any non-python datetime object in a list of time objects
+    to (python) dt.datetime object. 
+    This is useful for making the xaxis of any time-series plots human-readable, 
+    possibly due to a bug in bokeh.
+    """
+    mro = get_mro
     
+    # check if the topmost mro is datetime.datetime object
+    if all( (mro(t)[0] == dt.datetime) for t in tlist):
+        return tlist
+
+    print('Converting timevalues to python datetime object')
+    dt_list= list(map(lambda t: t.to_pydatetime(), tlist))
+    return dt_list
+        
 ################################################################################
 # URL helpers
 ################################################################################
