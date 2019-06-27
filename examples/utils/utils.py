@@ -31,7 +31,6 @@ def attr_print(myObj):
     attrs = [att for att in dir(dimx) if not att.startswith('_')]
     pprint(attrs)
     
-
 ################################################################################
 # Geocoding Conversion Helpers
 ################################################################################

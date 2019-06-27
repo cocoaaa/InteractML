@@ -177,6 +177,9 @@ def append_to_div(hvDiv, new_str):
 ## Debug helpers
 ################################################################################    
 def get_debug_div(*args, **kwargs):
+    print('get_debug_div called')
+#     import inspect
+#     pdb.set_trace()
     content = f'<p> args: {str(args)} </p>'
     content += """
     <p> kwargs:  </p>
