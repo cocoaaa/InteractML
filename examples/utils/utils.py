@@ -88,6 +88,11 @@ def get_addr(lat, lon):
     loc= geolocator.reverse(f'{lat}, {lon}')
     return loc.address
 
+## string manipulation
+def to_fname(s):
+    return '_'.join(
+    list(map(lambda s: s.strip(',_-:;').lower(), s.split()))
+)
     
     
 ################################################################################
@@ -126,6 +131,11 @@ def test_get_addr():
     lat, lon = -5, 37 # somewhere in africa
     print('lat, lon: ', lat, lon)
     print(get_addr(lat, lon))
+
+def test_to_fname():
+    s = 'Pyin Hpyu Gyi, Republic of the Union of Myanmar: Google- Earth'
+    print('original: ', s)
+    print('to_fname: ', to_fname(s))
     
 def test_all():
     test_get_mro()
@@ -135,6 +145,7 @@ def test_all():
     test_is_valid_url()
     test_get_latlon()
     test_get_addr()
+    test_to_fname()
     
     
 if __name__ == '__main__':
