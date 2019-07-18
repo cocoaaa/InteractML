@@ -174,6 +174,24 @@ def append_to_div(hvDiv, new_str):
     hvDiv.data += new_str
     
 ################################################################################
+## Debug helpers
+################################################################################    
+def get_debug_div(*args, **kwargs):
+    print('get_debug_div called')
+#     import inspect
+#     pdb.set_trace()
+    content = f'<p> args: {str(args)} </p>'
+    content += """
+    <p> kwargs:  </p>
+    <ul>
+    """
+    for k,v in kwargs.items():
+        content += f'<li>{k}: {v}</li>'
+    content += '</ul>'
+    return hv.Div(content)
+
+    
+################################################################################
 ## Tests
 ################################################################################
 def test_ranges2lbrt():
