@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 from IPython.display import JSON, display
 
 import datetime as dt
@@ -52,6 +53,39 @@ def get_addr(lat, lon):
     geolocator = Nominatim(user_agent="specify_your_app_name_here")
     loc= geolocator.reverse(f'{lat}, {lon}')
     return loc.address
+
+
+################################################################################
+# Coordinate System Conversion Helpers
+################################################################################
+def UV2angMag(U,V):
+    """
+    Given two MxN np.ndarrays for x, y coordinates (eg. outputs of np.meshgrid),
+    assume U[j,i] and V[j,i] corresponds to x,y components of a vector.
+    This function computes the angle and magnitude of the vector and stores in the 
+    output arrays. Conceptually, it computes: 
+        
+        angle = np.empty(U.shape)
+        mag = np.empty(U.shape)
+        for j in V[:,0]:
+            for i in U[0,:]:
+            v = vec(U[j,i], V[j,i])
+            angle[j,i] = angle(v)
+            mag[j,i] = magnitude(v)
+           
+    This is useful to visualize the vectorfield using holoviews's hv.VectorField.
+    
+    Args:
+    - U,V (MxN np.ndarray): encodes X,Y coordinate grids respectively
+    
+    Returns:
+    - angle, mag: tuple of MxN np.ndarray that encode ang (or mag) for the grid space
+    That means, angle[j][i] at (X[j][i],Y[j][i]) location
+    """
+    mag = np.sqrt(U**2 + V**2)
+    angle = (np.pi/2.) - np.arctan2(U/mag, V/mag)
+
+    return (angle, mag)
 
 ################################################################################
 # Time Type Conversion Helpers
@@ -181,23 +215,6 @@ def relabel_elements(ndoverlay, labels):
     return relabeled
 
 
-## geocoders: addr string -> lat, lon & vice versa
-def get_latlon(addr_str):
-    """
-    Given a string address, resolve its location in (lat, lon) degrees
-    """
-    geolocator = Nominatim(user_agent="myawesomeproj")
-    loc = geolocator.geocode(addr_str)
-    return loc.latitude, loc.longitude
-
-def get_addr(lat, lon):
-    """
-    Given lat, lon in degrees, return a resolved address as a string.
-    Eg: get_addr_str(52.509669, 13.376294) -> "Potsdamer Platz, Mitte, Berlin, 10117..."
-    """
-    geolocator = Nominatim(user_agent="specify_your_app_name_here")
-    loc= geolocator.reverse(f'{lat}, {lon}')
-    return loc.address
 
 ## string manipulation
 def to_fname(s):

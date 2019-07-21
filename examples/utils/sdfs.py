@@ -5,6 +5,7 @@ from vector import Vector as vec
 
 import numpy as np
 from functools import partial
+import functools
 
 import pdb
 
@@ -31,8 +32,6 @@ def sdLine( query, a, b):
     h = np.clip( qa.inner(ba)/ba.inner(ba), 0.0, 1.0)
     return (qa - ba*h).norm()
 
-# Unit horizontal line from the origin (ie. line between (0,0) and (1,0)
-sdUnitHline = partial(sdLine, a=vec(0.,0.), b=vec(1.0, 0.0))
 
 ###############################################################################
 # Triangles
@@ -75,8 +74,40 @@ def sdTriangle(query, v0, v1, v2):
     dist2_y = min(s*d0.cross(e0), s*d1.cross(e1), s*d2.cross(e2))
     
     return -np.sqrt(dist2_x) * np.sign(dist2_y)
+
+def sdStar(query, radius, n, m):
+    """
+    Args:
+    - query (vec)
+    - radius (float)
+    - n (int)
+    - m (float)
+    """
+    # Next 4 lines can be precomputed for a given shape
+    an = np.pi/float(n)
+    en = 2*np.pi/m
+    acs = vec(np.cos(an), np.sin(an))
+    ecs = vec(np.cos(en), np.sin(en))
     
-    
+    bn = np.mod(np.arctan2(*query.values), 2.0*an) - an
+    query = query.norm() * vec(np.cos(bn), np.abs(np.sin(bn)))
+    query = query - radius*acs
+    query = query + ecs * np.clip(- query.inner(ecs), 0.0, radius*acs[1]/ecs[1])
+    return query.norm() * np.sign(query[0])
+
+
+###############################################################################
+# Useful, wrapped sdfs
+###############################################################################
+# Unit horizontal line from the origin (ie. line between (0,0) and (1,0)
+sdUnitHline = partial(sdLine, a=vec(0.,0.), b=vec(1.0, 0.0))
+
+# Unit circle centered at the origin
+sdUnitCircle = partial(sdCircle, radius=1.0)
+
+
+
+
 ###############################################################################
 # Test
 ###############################################################################
@@ -95,7 +126,7 @@ def test_sdTriangle():
     q = vec(0.,-1.)
     v0, v1, v2 = vec(0,0), vec(1,0), vec(0.5, 0.5)
     assert np.isclose( [sdTriangle(q, v0, v1, v2)], [-1.])
-    
+
 def run_tests():
     test_sdCircle()
     test_sdLine()
