@@ -1,4 +1,4 @@
-import os
+import os, time
 import json
 import numpy as np
 from IPython.display import JSON, display
@@ -33,6 +33,21 @@ def attr_print(myObj):
     attrs = [att for att in dir(dimx) if not att.startswith('_')]
     pprint(attrs)
     
+################################################################################
+# Profiling Helpers
+################################################################################
+def timeit(method):
+
+    def timed(*args, **kw):
+        ts = time.time()
+        result = method(*args, **kw)
+        te = time.time()
+
+        nprint(f'{method.__name__} took: {te-ts:.3f}sec')
+        return result
+
+    return timed
+
 ################################################################################
 # Geocoding Conversion Helpers
 ################################################################################
