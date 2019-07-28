@@ -3,13 +3,20 @@ import numpy as np
 import scipy as sp
 from scipy.signal import correlate2d
 from utils import timeit
+
+################################################################################
+# Kernels for levelset methods
 ################################################################################
 class Kernel():
     xb = np.atleast_2d([-1,1,0])
-    xf = np.atleast_2d([-1,1]) # same as np.atleast_2d([0,-1,1]) #forward difference kernel for x-direction
+    xf = np.atleast_2d([-1,1]) # same as np.atleast_2d([0,-1,1])
+   
     yb = np.atleast_2d([1,-1]).T
     yf = np.atleast_2d([1,-1,0]).T
     
+    
+################################################################################
+# Levelset method
 ################################################################################
 class LevelSet():
     """LevelSet Evolution according to an initial-valued problem given by a PDE

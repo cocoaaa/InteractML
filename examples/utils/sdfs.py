@@ -8,6 +8,18 @@ from functools import partial
 import functools
 
 import pdb
+###############################################################################
+# Evaluate SDF on a grid 
+###############################################################################
+def eval_sdf(xs, ys, sdFunc):
+    zz = np.empty( (len(ys), len(xs)) )
+    
+    for j in range(len(ys)):
+        for i in range(len(xs)):
+            q = vec(xs[i],ys[j])
+            zz[j,i] = sdFunc(q)
+    return zz
+
 
 ###############################################################################
 # SDFs
@@ -97,13 +109,21 @@ def sdStar(query, radius, n, m):
 
 
 ###############################################################################
-# Useful, wrapped sdfs
+# Useful, wrapped sdfs as partial functions
 ###############################################################################
 # Unit horizontal line from the origin (ie. line between (0,0) and (1,0)
 sdUnitHline = partial(sdLine, a=vec(0.,0.), b=vec(1.0, 0.0))
 
 # Unit circle centered at the origin
 sdUnitCircle = partial(sdCircle, radius=1.0)
+
+# Variants of stars
+sdStar1 = partial(sdStar, radius=1, n=5, m=5.)
+sdStar2 = partial(sdStar, radius=1, n=10, m=3.)
+
+
+
+
 
 
 
