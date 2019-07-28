@@ -25,13 +25,17 @@ THE SOFTWARE.
 import math
 import inspect
 
+import holoviews as hv
 import pdb
 
 class Vector():
     def __init__(self, *args):
         """ Create a vector, example: v = Vector(1,2) """
-        if len(args)==0: self.values = [0.,0.]
+        if len(args) == 0: 
+            self.values = [0.,0.]
         else: self.values = list(args)
+        
+        self.ndim = len(self.values)
         
     def norm(self):
         """ Returns the norm (length, magnitude) of the vector """
@@ -102,7 +106,7 @@ class Vector():
 
     
     def cross(self, other):
-        if not (len(self) == 2 and len(other) == 2):
+        if not (self.ndim == 2 and other.ndim == 2):
             raise ValueError("Cross product is currently defined only for 2D vectors: ",
                              len(other), len(self))
         return self._cross2D(other)
@@ -148,11 +152,15 @@ class Vector():
     
     def __getitem__(self, key):
         return self.values[key]
+    
     def __setitem__(self, key, value):
         self.values[key] = value
         
     def __repr__(self):
         return f"Vector({self.values})"
+    
+    def hvplot(self, **opts):
+        return hv.Points([ self.values ]).opts(**opts)
 
 # class Vector2d(Vector):
 #     def __init__(self, *args):
