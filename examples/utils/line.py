@@ -47,10 +47,20 @@ class Line2d():
         """
         Args:
         - direction (2d vec): Doesn't have to be of unit length as we will do the normalization again.
+        If the angle from self.tangent to direction vector is not in range [0,np.pi], 
+        we negate the direction vector in order to preserve the ordering of returned band box
         - distance (positive float)
+        
+        Returns:
+        - (top-left, bottom-left, bottom-right, top-right): a list of Vector that represents
+        the band bbox
         """
         assert direction.ndim == 2 and distance >= 0
         direction = direction.normalize() 
+        
+        if self.unit_tangent().inner(direction) < 0:
+            print("direction vector is flipped")
+            direction = i
         b0 = self.p0 + direction
         b1 = self.p0 - direction
         b2 = self.p1 - direction
@@ -64,7 +74,7 @@ class Line2d():
     def __repr__(self):
         return f"Line2d({self.p0.values}, {self.p1.values})"
         
-    
+        
 ################################################################################
 # Tests
 ################################################################################
