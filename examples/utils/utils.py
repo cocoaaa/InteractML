@@ -1,5 +1,6 @@
 import os, time
 import json
+from collections import defaultdict
 import numpy as np
 from IPython.display import JSON, display
 
@@ -9,7 +10,6 @@ from pprint import pprint
 import pdb
 
 from geopy.geocoders import Nominatim
-
     
 ################################################################################
 # Python Object Inspection Helpers
@@ -33,6 +33,38 @@ def attr_print(myObj):
     attrs = [att for att in dir(dimx) if not att.startswith('_')]
     pprint(attrs)
     
+################################################################################
+# Floating Points precision cleanup
+################################################################################
+def clip_close_values(arr):
+    """
+    A method to clean up floating points in an array so that "equal" values 
+    (decided by np.isclose function) are assigned to only a unique representative
+    value. For instance, arr=[ 0.000000000001, 0.000000000009] will appear to have
+    different colors by both matplotlib.pyplot and holoviews, but we want the visualization
+    to match the fact they actually represent the same value even though they have 
+    slightly different numerical values (due to some operations that generated the array,
+    eg. np.gradient.
+    
+    We use python dictionary and the computation complexity it \theta(arr.numele()) 
+    """
+    unique_vals = defaultdict(int)
+    clipped = np.empty_like(arr)
+    for i, val in enumerate(arr.flat):
+        i_tuple = np.unravel_index(i, arr.shape)
+
+        curr_keys = np.asarray(list(unique_vals.keys()))
+        key_found = np.unique(curr_keys[np.isclose(val, curr_keys)])
+        if key_found.ndim > 0:
+            clipped[i_tuple] = key_found[0]
+            unique_vals[key_found[0]] += 1 
+        else:
+            clipped[i_tuple] = val
+            unique_vals[val] += 1 
+    return clipped
+#     return clipped, unique_vals
+
+
 ################################################################################
 # Profiling Helpers
 ################################################################################
@@ -259,6 +291,37 @@ def test_dict2json():
 
 def test_cols_with_null():
     pass
+
+def test_clip_close_values_1():
+    tiny1 = 0.02020202020202011
+    tiny2 = 0.020202020202020332
+    original = np.atleast_2d([tiny1,tiny1, tiny2, tiny2, tiny1])
+    clipped = clip_close_values(original)
+    f,ax = plt.subplots(1,2)
+    ax[0].imshow(original)
+    ax[0].set_title('original')
+    ax[1].imshow(clipped)
+    ax[1].set_title('clipped')
+    
+def test_clip_close_values_2():
+    def linear_array():
+        h,w = 100,100
+        xs = np.linspace(-1,1,num=w)
+        ys = np.linspace(-1,1,num=h)[::-1]
+        zz = np.empty((w,h))
+        for i in range(len(xs)):
+            for j in range(len(ys)):
+                zz[j,i] = ys[j] 
+        return (xs,ys,zz)
+    xs,ys,zz = linear_array()
+    original = np.atleast_2d(zz)
+    clipped = clip_close_values(original)
+    f,ax = plt.subplots(1,2)
+    ax[0].imshow(original)
+    ax[0].set_title('original')
+    ax[1].imshow(clipped)
+    ax[1].set_title('clipped')    
+
 
 def test_is_valid_url():
     url = 'http://workflow.isi.edu/MINT/FLDAS/FLDAS_NOAH01_A_EA_D.001/2019/04/FLDAS_NOAH01_A_EA_D.A20190401.001.nc'
