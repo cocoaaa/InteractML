@@ -3,18 +3,8 @@ import numpy as np
 import scipy as sp
 from scipy.signal import correlate2d
 from utils import timeit
+from grid import CartesianGrid
 
-################################################################################
-# Kernels for levelset methods
-################################################################################
-class Kernel():
-    xb = np.atleast_2d([-1,1,0])
-    xf = np.atleast_2d([-1,1]) # same as np.atleast_2d([0,-1,1])
-   
-    yb = np.atleast_2d([1,-1]).T
-    yf = np.atleast_2d([1,-1,0]).T
-    
-    
 ################################################################################
 # Levelset method
 ################################################################################
@@ -24,7 +14,7 @@ class LevelSet():
     - F (callable): takes a LevelSet object and time index and returns a np array 
     with the same shape as the levelset's grid
     """
-    def __init__(self, h,w, step=1., t=0):
+    def __init__(self, xs, ys, step=1., t=0):
         self.w = w
         self.h = h
         self.grid = self.init_grid()#np.empty((h,w))
