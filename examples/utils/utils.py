@@ -2,6 +2,7 @@ import os, time
 import json
 from collections import defaultdict
 import numpy as np
+import matplotlib.pyplot as plt
 from IPython.display import JSON, display
 
 import datetime as dt
@@ -55,12 +56,17 @@ def clip_close_values(arr):
 
         curr_keys = np.asarray(list(unique_vals.keys()))
         key_found = np.unique(curr_keys[np.isclose(val, curr_keys)])
-        if key_found.ndim > 0:
+        try:
             clipped[i_tuple] = key_found[0]
             unique_vals[key_found[0]] += 1 
-        else:
+#             print("--\tFound key: ", key_found[0])
+
+        except IndexError:
+#             print("First time!: ", val)
             clipped[i_tuple] = val
             unique_vals[val] += 1 
+        except:
+            print("This should never be printed")
     return clipped
 #     return clipped, unique_vals
 
