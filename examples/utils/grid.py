@@ -12,13 +12,25 @@ class CartesianGrid():
     def __init__(self, xs, ys, data=None):
         """
         Assumes regularly spaced x-coordinates and y-coordinates
+        That is, 
+        - xcoords in xs increases as we iterate over xs
+        - ycoords in ys decreases as we iterate over ys
+        This ordering will be validated at initiaization time
+        
+        - self.data is also in Cartesian coordinate system, which has an 
+        important implication that its axis is the opposite of row indexing
+        to the numpy array 
         """
+        if ys[0] < ys[-1]:
+            raise ValueError("ys must be in decreasing order")
         self.xs = xs
         self.ys = ys
         self.xmin, self.xmax = xs[0], xs[-1]
-        self.ymin, self.ymax = ys[0], ys[-1]
-        self.dx = xs[1] - xs[0]
-        self.dy = ys[1] - ys[0]
+        self.ymin, self.ymax = ys[-1], ys[0]
+        
+        # levelset sampling resolution in x direction (for discretization)
+        self.dx = xs[1] - xs[0] 
+        self.dy = -(ys[1] - ys[0])
         
         # Underlying data storage as numpy array
         self.height = len(ys)
@@ -33,8 +45,16 @@ class CartesianGrid():
     ###############################################################################
     def xy2ij(self,x,y, do_better=True):
         """
-        Choose the right bin index to xs and ys
+        Choose the right bin index to xs and ys.
+        Assume xs and ys are both Cartesian coordinate's axes. That is, 
+        xs's values increase as we iterate over it, but 
+        ys's values decreases as we iterate over it.
+        
+        First we get the bin index as if ys is also in the same ordering as xs, 
+        and then flip it to compensate for our assumption
         """
+        ys = self.ys[::-1]
+
         if x < self.xmin or x > self.xmax:
             raise ValueError(f'x out of bound of [{self.xmin, self.xmax}]: {x}')
         if y < self.ymin or y > self.ymax:
@@ -52,11 +72,11 @@ class CartesianGrid():
             i = i if diff_left < diff_right else i+1
             
         if j < self.height-1:
-            diff_left = abs(y - self.ys[j])
-            diff_right = abs(self.ys[j+1] - y)
+            diff_left = abs(y - ys[j])
+            diff_right = abs(ys[j+1] - y)
             j = j if diff_left < diff_right else j+1
         
-        return i,j
+        return i, self.height-1-j
     
     def ij2cr(self, i, j):
         """
@@ -69,7 +89,6 @@ class CartesianGrid():
     def xy2cr(self,x,y):
         i,j = self.xy2ij(x,y)
         return self.ij2cr(i,j)
-    
     
     def get_value(self, x, y):
         """
