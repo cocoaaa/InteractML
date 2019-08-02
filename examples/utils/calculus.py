@@ -86,17 +86,20 @@ def grady_bf(M, switch, postproc=clip_close_values):
         
     return dyb, dyf
 
-def diff2_central(grid, postproc=clip_close_values):
+def diff2_central(M, postproc=clip_close_values):
     """Central Second-order difference, accuracy of second order
     
     - postproc (callable): Callable to apply to the output of the differentiation operations
     before returning the final output
     """
     # todo: mix and match backford and forward diff1 
-    pass
+    d2x = correlate2d(M, CartesianKernel.diff2_xx, mode='same')
+    d2y = correlate2d(M, CartesianKernel.diff2_yy, mode='same')
+    dxdy = correlate2d(M, CartesianKernel.diff2_xy, mode='same')
+    return d2x, d2y, dxdy
 
 
-def curvature(grid):
+def curvature(grid, postproc=clip_close_values):
     dx, dy = diff1_central(grid)
     d2x, d2y, dxdy = diff2_central(grid)
     
