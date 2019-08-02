@@ -65,6 +65,19 @@ class LSTestSample():
             for j in range(len(ys)):
                 zz[j,i] = ys[j] 
         return (xs,ys,zz)
+    
+    @staticmethod
+    def centered_linear_grid():
+        n = 100
+        xs = np.arange(n)/n 
+        median = xs[n//2]
+        xs = np.r_[xs - median, median]
+        ys = xs[::-1]
+        zz = np.empty((len(ys), len(xs)))
+        for i in range(len(xs)):
+            for j in range(len(ys)):
+                zz[j,i] = ys[j] 
+        return (xs,ys,zz)
 
     @staticmethod
     def generate_pattern(pattern, repeats):
