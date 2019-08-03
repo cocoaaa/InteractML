@@ -113,18 +113,17 @@ def sdStar(query, radius, n, m):
 ###############################################################################
 # Unit horizontal line from the origin (ie. line between (0,0) and (1,0)
 sdUnitHline = partial(sdLine, a=vec(0.,0.), b=vec(1.0, 0.0))
+setattr(sdUnitHline, '__name__', 'sdUnitHline')
 
 # Unit circle centered at the origin
 sdUnitCircle = partial(sdCircle, radius=1.0)
+setattr(sdUnitCircle, '__name__', 'sdUnitCircle')
 
 # Variants of stars
 sdStar1 = partial(sdStar, radius=1, n=5, m=5.)
 sdStar2 = partial(sdStar, radius=1, n=10, m=3.)
-
-
-
-
-
+setattr(sdStar1, '__name__', 'sdStar1')
+setattr(sdStar2, '__name__', 'sdStar2')
 
 
 
