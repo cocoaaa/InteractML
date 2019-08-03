@@ -11,6 +11,17 @@ from pprint import pprint
 import pdb
 
 from geopy.geocoders import Nominatim
+
+
+################################################################################
+# IO Helpers
+################################################################################
+def get_timestamp():
+    return dt.datetime.now().strftime("%y%m%d_%H%M%S")
+    
+def get_temp_fname(prefix='', suffix=''):
+    tstamp = get_timestamp()
+    return ''.join(['_'.join([prefix, tstamp]), suffix])
     
 ################################################################################
 # Python Object Inspection Helpers
