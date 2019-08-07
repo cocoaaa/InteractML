@@ -22,6 +22,16 @@ def get_timestamp():
 def get_temp_fname(prefix='', suffix=''):
     tstamp = get_timestamp()
     return ''.join(['_'.join([prefix, tstamp]), suffix])
+
+import imageio
+fname = '../outputs/levelset/2019-08-02/sdStar1_f_-1_dt_0.001_t_0_0.3.gif'
+def tensor_from_video(fname):
+    reader = imageio.get_reader(fname, 'ffmpeg')
+    imgs = np.transpose( np.stack(list(reader.iter_data()), axis=0), (0,3,1,2))
+    imgs = np.expand_dims(imgs, 0)
+    assert imgs.ndim == 5, f'Video data must be 5 dimensional: batchsize, timesteps, C,H,W: {imgs.dim}'
+    return torch.from_numpy(imgs)
+
     
 ################################################################################
 # Python Object Inspection Helpers
